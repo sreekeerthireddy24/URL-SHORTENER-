@@ -1,0 +1,64 @@
+#include <iostream>
+#include <unordered_map>
+#include <string>
+#include <cstdlib>
+#include <ctime>
+
+class UrlShortener {
+private:
+    std::unordered_map<std::string, std::string> urlMap;
+    const std::string baseUrl = "http://short.ly/";
+    const std::string characters = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
+    int codeLength = 6;
+
+    std::string generateShortCode() {
+        std::string shortCode;
+        for (int i = 0; i < codeLength; ++i) {
+            shortCode += characters[rand() % static_cast<int>(characters.length())];
+        }
+        return shortCode;
+    }
+
+public:
+    std::string shortenUrl(const std::string& originalUrl) {
+        std::string shortCode;
+        do {
+            shortCode = generateShortCode();
+        } while (urlMap.find(shortCode) != urlMap.end());
+
+        urlMap[shortCode] = originalUrl;
+        return baseUrl + shortCode;
+    }
+
+    std::string retrieveUrl(const std::string& shortCode) {
+        auto it = urlMap.find(shortCode);
+        return (it != urlMap.end()) ? it->second : "URL not found!";
+    }
+};
+
+int main() {
+    // Seed random number generator once in main
+    srand(static_cast<unsigned int>(time(0)));
+
+    UrlShortener urlShortener;
+
+    std::string originalUrl;
+    std::cout << "Enter a URL to shorten: ";
+    std::getline(std::cin, originalUrl);  // Use getline to allow spaces
+
+    std::string shortUrl = urlShortener.shortenUrl(originalUrl);
+    std::cout << "Shortened URL: " << shortUrl << std::endl;
+
+    std::string shortCodeInput;
+    std::cout << "Enter the short URL or code to retrieve the original URL: ";
+    std::getline(std::cin, shortCodeInput);
+
+    // Safely extract short code
+    size_t pos = shortCodeInput.find_last_of('/');
+    std::string shortCode = (pos != std::string::npos) ? shortCodeInput.substr(pos + 1) : shortCodeInput;
+
+    std::string retrievedUrl = urlShortener.retrieveUrl(shortCode);
+    std::cout << "Original URL: " << retrievedUrl << std::endl;
+
+    return 0;
+}
